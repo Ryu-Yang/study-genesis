@@ -1,5 +1,5 @@
 import genesis as gs
-gs.init(backend=gs.cpu)
+gs.init(backend=gs.gpu)
 
 scene = gs.Scene(show_viewer=True)
 plane = scene.add_entity(gs.morphs.Plane())
