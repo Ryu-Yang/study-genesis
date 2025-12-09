@@ -143,6 +143,14 @@ gs.init(backend=gs.gpu, logging_level="warn")
 scene = gs.Scene(
     sim_options=gs.options.SimOptions(),
     viewer_options=gs.options.ViewerOptions(),
+    vis_options = gs.options.VisOptions(
+        show_world_frame = False, # visualize the coordinate frame of `world` at its origin
+        world_frame_size = 1.0, # length of the world frame in meter
+        show_link_frame  = False, # do not visualize coordinate frames of entity links
+        show_cameras     = False, # do not visualize mesh and frustum of the cameras added
+        plane_reflection = True, # turn on plane reflection
+        ambient_light    = (0.1, 0.1, 0.1), # ambient light setting
+    ),
     show_viewer=True,
 )
 
