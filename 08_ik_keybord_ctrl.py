@@ -13,7 +13,7 @@ class KeyboardController:
         self.target_euler = np.array([0.0, 0.0, 0.0])  # 欧拉角 (roll, pitch, yaw)，单位：弧度
         self.position_step = 0.002  # 位置移动步长
         self.orientation_step = 0.005  # 姿态旋转步长，单位：弧度
-        self.gripper_force = np.array([0.0, 0.0])  # 夹爪力控制
+        self.gripper_force = np.array([3.0, 3.0])  # 夹爪力控制
         
         # 启动键盘监听
         self.listener = keyboard.Listener(
@@ -72,13 +72,13 @@ class KeyboardController:
             self.target_pos[2] -= self.position_step
         
         # 姿态控制 (欧拉角) - 使用数字键
-        if '8' in self.keys_pressed:  # 增加绕X轴旋转 (roll+)
+        if '6' in self.keys_pressed:  # 增加绕X轴旋转 (roll+)
             self.target_euler[0] += self.orientation_step
-        if '2' in self.keys_pressed:  # 减少绕X轴旋转 (roll-)
+        if '4' in self.keys_pressed:  # 减少绕X轴旋转 (roll-)
             self.target_euler[0] -= self.orientation_step
-        if '4' in self.keys_pressed:  # 增加绕Y轴旋转 (pitch+)
+        if '8' in self.keys_pressed:  # 增加绕Y轴旋转 (pitch+)
             self.target_euler[1] += self.orientation_step
-        if '6' in self.keys_pressed:  # 减少绕Y轴旋转 (pitch-)
+        if '2' in self.keys_pressed:  # 减少绕Y轴旋转 (pitch-)
             self.target_euler[1] -= self.orientation_step
         if '7' in self.keys_pressed:  # 增加绕Z轴旋转 (yaw+)
             self.target_euler[2] += self.orientation_step
@@ -119,8 +119,8 @@ class KeyboardController:
         print("  +/= 键   - 向上移动 (Z轴)")
         print("  - 键     - 向下移动 (Z轴)")
         print("\n姿态控制 (欧拉角):")
-        print("  8/2 键 - 增加/减少绕X轴旋转 (Roll)")
-        print("  4/6 键 - 增加/减少绕Y轴旋转 (Pitch)")
+        print("  6/4 键 - 增加/减少绕X轴旋转 (Roll)")
+        print("  8/2 键 - 增加/减少绕Y轴旋转 (Pitch)")
         print("  7/9 键 - 增加/减少绕Z轴旋转 (Yaw)")
         print("  空格键  - 重置姿态为初始值")
         print("\n夹爪控制:")
@@ -196,26 +196,28 @@ controller = KeyboardController()
 # 初始位置（lift后的位置）
 initial_pos = np.array([0.4, 0.0, 0.4])
 initial_euler = np.array([math.pi, 0.0, 0.0])
+
+# initial_pos = np.array([0.0, 0.0, 0])
+# initial_euler = np.array([0.0, 0.0, 0.0])
+
 initial_quat = controller.euler_to_quat(*initial_euler)
 
 controller.target_pos = initial_pos.copy()
 controller.target_euler = initial_euler.copy()
 
-# 先移动到初始位置
+# 先移动到初始位置,这个IK感觉有问题
 qpos = franka.inverse_kinematics(
     link=end_effector,
     pos=controller.target_pos,
     quat=initial_quat,
 )
-# gripper open pos
-qpos[-2:] = 0.1
 path = franka.plan_path(
     qpos_goal     = qpos,
     num_waypoints = 200, # 2s duration
 )
 # execute the planned path
 for waypoint in path:
-    franka.control_dofs_position(waypoint)
+    franka.control_dofs_position(waypoint[:-2], motors_dof)
     scene.step()
 
 # allow robot to reach the last waypoint
@@ -262,8 +264,7 @@ try:
             franka.control_dofs_position(qpos[:-2], motors_dof)
             
             # 控制夹爪
-            if np.any(controller.gripper_force != 0):
-                franka.control_dofs_force(controller.gripper_force, fingers_dof)
+            franka.control_dofs_force(controller.gripper_force, fingers_dof)
             
         except Exception as e:
             print(f"逆运动学求解失败: {e}")
