@@ -87,7 +87,7 @@ class KeyboardController:
         
         # 重置姿态 (使用空格键)
         if keyboard.Key.space in self.keys_pressed:
-            self.target_euler = np.array([0.0, 0.0, 0.0])
+            self.target_euler = np.array([math.pi, 0.0, 0.0])
         
         # 夹爪控制 (使用b/n键)
         if 'b' in self.keys_pressed:  # 夹紧
